@@ -1,6 +1,10 @@
-// search.controller.ts
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SearchService } from '../service/search.service';
 import { SearchAddressDto } from '../dto/search-address.dto';
 
@@ -12,11 +16,26 @@ export class SearchController {
   @Get()
   @ApiOperation({ summary: 'Search for properties by address' })
   @ApiResponse({ status: 200, description: 'Successful search' })
+
+  @ApiQuery({
+    name: 'address',
+    required: true,
+    type: String,
+    example: '5515 Washington Avenue',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    example: 5,
+  })
+
   async search(@Query() query: SearchAddressDto) {
-    const { exactMatch, results } = await this.searchService.exactSearch(
-      query.address,
-      query.limit,
-    );
+    const { exactMatch, results } =
+      await this.searchService.exactSearch(
+        query.address,
+        query.limit,
+      );
 
     if (exactMatch) {
       return {
