@@ -1,5 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SearchService } from '../service/search.service';
 import { SearchAddressDto } from '../dto/search-address.dto';
 
@@ -29,23 +34,43 @@ export class SearchController {
       query.limit,
     );
 
+    // Exact Match
     if (exactMatch) {
       return {
         success: true,
         exactMatch: true,
+        message: 'Exact match found.',
         count: results.length,
         data: results,
       };
     }
 
-    const suggestions = results.map((p) => p.fullAddress);
+    // No Match At All
+    if (results.length === 0) {
+      return {
+        success: true,
+        exactMatch: false,
+        message: 'No matching properties found.',
+        count: 0,
+        suggestions: [],
+      };
+    }
+
+    // Best Ranked Match
+    const bestMatch = results[0];
+
+    // Top 5 Suggestions
+    const suggestions = results
+      .slice(0, 5)
+      .map((property) => property.fullAddress);
 
     return {
       success: true,
       exactMatch: false,
-      message: 'No exact match found. Did you mean one of these?',
-      count: Math.min(suggestions.length, 5),
-      suggestions: suggestions.slice(0, 5),
+      message: 'No exact match found. Showing the closest matching property.',
+      count: 1,
+      data: [bestMatch],
+      suggestions,
     };
   }
 }

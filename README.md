@@ -1,90 +1,63 @@
-# Intelligent Property Search API
+# Intelligent Property Address Search Backend
 
-A high-performance backend service built with **NestJS**, **PostgreSQL**, and **TypeORM** that provides intelligent property address searching using exact matching, fuzzy matching, and ranked search suggestions.
+## Overview
+
+The Intelligent Property Address Search Backend is a NestJS-based REST API that enables fast and intelligent searching of property addresses stored in PostgreSQL.
+
+The application supports exact address matching, fuzzy searching, intelligent ranking, and "Did You Mean" suggestions for misspelled or incomplete user queries. PostgreSQL's `pg_trgm` extension is used to improve search accuracy and performance.
 
 ---
 
-## Project Overview
+## Tech Stack
 
-The Intelligent Property Search API enables users to search property records efficiently even when the input address contains spelling mistakes, abbreviations, or partial information.
-
-The application combines address parsing, normalization, PostgreSQL trigram search (`pg_trgm`), and a custom ranking algorithm to provide accurate search results and "Did You Mean" suggestions.
+- NestJS
+- TypeScript
+- PostgreSQL
+- TypeORM
+- PostgreSQL pg_trgm
+- Swagger (OpenAPI)
+- Class Validator
+- Class Transformer
 
 ---
 
 ## Features
 
-* Exact Address Search
-* Intelligent Fuzzy Search using PostgreSQL `pg_trgm`
-* Address Parsing
-* Address Normalization
-* Ranked Search Results
-* "Did You Mean" Suggestions
-* CSV Data Import
-* PostgreSQL Database
-* TypeORM Migrations
-* Swagger API Documentation
-* Health Check Endpoint
-* Global Exception Handling
-* Request Validation
-* Modular NestJS Architecture
-
----
-
-## Technology Stack
-
-### Backend
-
-* NestJS
-* TypeScript
-* Node.js
-
-### Database
-
-* PostgreSQL
-* TypeORM
-
-### Search
-
-* PostgreSQL pg_trgm Extension
-* GIN Indexes
-* Trigram Similarity Search
-
-### Documentation
-
-* Swagger / OpenAPI
+- Intelligent Address Parsing
+- Address Normalization
+- Exact Address Search
+- PostgreSQL Trigram (pg_trgm) Fuzzy Search
+- Intelligent Search Result Ranking
+- "Did You Mean" Suggestions
+- Health Check Endpoint
+- Swagger API Documentation
+- CSV Data Import (Batch Seeder)
+- PostgreSQL Query Optimization
+- GIN Indexes for Fast Search
 
 ---
 
 ## Project Structure
 
-```text
-src/
-│
-├── common/
-│   ├── filters/
-│   ├── logger/
-│
-├── config/
-│
-├── database/
-│   ├── migrations/
-│   ├── seed/
-│
-├── health/
-│
-├── properties/
-│   ├── entities/
-│   ├── repositories/
-│
-├── search/
-│   ├── controller/
-│   ├── dto/
-│   ├── normalizer/
-│   ├── parser/
-│   ├── service/
-│
-├── app.module.ts
+```
+src
+├── common
+│   ├── filters
+│   └── logger
+├── config
+├── database
+│   ├── migrations
+│   └── seed
+├── health
+├── properties
+│   ├── entities
+│   └── repositories
+├── search
+│   ├── controller
+│   ├── dto
+│   ├── normalizer
+│   ├── parser
+│   └── service
 └── main.ts
 ```
 
@@ -92,11 +65,8 @@ src/
 
 ## Search Flow
 
-```text
+```
 User Input
-      │
-      ▼
-Search Controller
       │
       ▼
 Address Parser
@@ -107,16 +77,19 @@ Address Normalizer
       ▼
 Exact Search
       │
-      ├──────────────► Match Found
-      │                    │
-      │                    ▼
-      │              Return Result
+      ├── Match Found
+      │       │
+      │       ▼
+      │   Return Property
       │
       ▼
 Fuzzy Search (pg_trgm)
       │
       ▼
-Ranking Algorithm
+Ranking Engine
+      │
+      ▼
+Best Matching Property
       │
       ▼
 Did You Mean Suggestions
@@ -124,45 +97,93 @@ Did You Mean Suggestions
 
 ---
 
-## Ranking Algorithm
+## Address Normalization
 
-Each fuzzy search result is assigned a score based on address similarity.
+The application standardizes user input before searching.
 
-| Component     | Score |
-| ------------- | ----: |
-| House Number  |    30 |
-| Street Name   |    40 |
-| Street Suffix |    10 |
+Examples:
 
-Maximum Score = **80**
+| User Input | Normalized |
+| ---------- | ---------- |
+| Avenue     | Ave        |
+| Street     | St         |
+| Road       | Rd         |
+| Boulevard  | Blvd       |
 
-Results are sorted in descending order to return the most relevant suggestions.
+Searches are case-insensitive.
 
 ---
 
-## Database Features
+## Intelligent Search Features
 
-* PostgreSQL
-* UUID Primary Keys
-* GIN Indexes
-* Trigram Search (`pg_trgm`)
-* Batch CSV Import
-* TypeORM Migrations
+The application supports:
+
+- Exact Address Search
+- Misspelled Street Names
+- Incorrect House Numbers
+- Partial Address Search
+- Missing Address Components
+- Case-Insensitive Search
+
+Example:
+
+Stored Address
+
+```
+5515 Washington Avenue, Bethlehem, NY 12010
+```
+
+User Searches
+
+```
+5515 Washington Avenue
+5515 Washington Ave
+5515 Wasington Avenue
+515 Washington Ave
+Washington Avenue, Bethlehem
+```
+
+The system returns the closest matching property along with additional suggestions when an exact match is unavailable.
+
+---
+
+## Intelligent Ranking
+
+Search results are ranked using weighted scoring.
+
+| Component       | Weight                                   |
+| --------------- | ---------------------------------------- |
+| Street Name     | 40                                       |
+| House Number    | 30                                       |
+| Street Suffix   | 10                                       |
+| City Similarity | Used during PostgreSQL similarity search |
+
+The highest-ranked property is returned as the best match.
+
+---
+
+## PostgreSQL Optimizations
+
+The project uses PostgreSQL query optimization techniques including:
+
+- pg_trgm Extension
+- GIN Indexes
+- Trigram Similarity
+- Optimized Search Queries
 
 ---
 
 ## Installation
 
-Clone the repository:
+Clone the project
 
-```bash
-git clone https://github.com/NiveshhRaj/intelligent-property-search.git
-cd intelligent-property-search
+```
+git clone https://github.com/NiveshhRaj/Intelligent-property-search.git
 ```
 
-Install dependencies:
+Install dependencies
 
-```bash
+```
 npm install
 ```
 
@@ -170,64 +191,72 @@ npm install
 
 ## Environment Variables
 
-Create a `.env` file in the project root.
+Create a `.env` file.
 
-```env
-PORT=3000
+Example
 
+```
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USERNAME=postgres
 DB_PASSWORD=your_password
-DB_NAME=intelligent_property_search
+DB_DATABASE=property_search
+
+PORT=3000
+API_PREFIX=api/v1
+```
+
+---
+
+## Database Setup
+
+Enable PostgreSQL pg_trgm extension
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+```
+
+Run database migrations
+
+```
+npm run migration:run
+```
+
+Import CSV data
+
+```
+npm run seed
 ```
 
 ---
 
 ## Running the Application
 
-Development mode:
+Development
 
-```bash
+```
 npm run start:dev
 ```
 
-Production build:
+Production
 
-```bash
+```
 npm run build
+
 npm run start:prod
 ```
 
 ---
 
-## Database Migration
+## Swagger Documentation
 
-Run the database migrations:
+Open
 
-```bash
-npm run migration:run
 ```
-
----
-
-## Seed the Database
-
-Import property records from the CSV file:
-
-```bash
-npm run seed
-```
-
----
-
-## API Documentation
-
-Swagger UI:
-
-```text
 http://localhost:3000/api/v1/docs
 ```
+
+Swagger provides interactive API testing.
 
 ---
 
@@ -235,7 +264,7 @@ http://localhost:3000/api/v1/docs
 
 ### Health Check
 
-```http
+```
 GET /api/v1/health
 ```
 
@@ -243,8 +272,21 @@ GET /api/v1/health
 
 ### Property Search
 
-```http
-GET /api/v1/search?address=5515 Washington Avenue
+```
+GET /api/v1/search
+```
+
+Query Parameters
+
+| Parameter | Required | Description               |
+| --------- | -------- | ------------------------- |
+| address   | Yes      | Property Address          |
+| limit     | No       | Maximum number of results |
+
+Example
+
+```
+GET /api/v1/search?address=5515 Washington Avenue&limit=5
 ```
 
 ---
@@ -268,58 +310,75 @@ GET /api/v1/search?address=5515 Washington Avenue
 
 ---
 
-### Did You Mean
+### Fuzzy Match
 
 ```json
 {
   "success": true,
   "exactMatch": false,
-  "message": "No exact match found. Did you mean one of these?",
-  "count": 3,
-  "suggestions": [
-    "5515 Washington Avenue, Bethlehem, NY 12010",
-    "5510 Washington Avenue, Bethlehem, NY 12010",
-    "5518 Washington Avenue, Bethlehem, NY 12010"
-  ]
+  "message": "No exact match found. Showing the closest matching property.",
+  "count": 1,
+  "data": [
+    {
+      "fullAddress": "5515 Washington Avenue, Bethlehem, NY 12010"
+    }
+  ],
+  "suggestions": ["5515 Washington Avenue, Bethlehem, NY 12010"]
 }
 ```
 
 ---
 
-## Performance Optimizations
+## Testing
 
-* PostgreSQL GIN Indexes
-* pg_trgm Similarity Search
-* Batch Database Inserts
-* Address Normalization
-* Custom Ranking Algorithm
-* Duplicate Prevention During Import
+The following scenarios were verified:
+
+- Exact Search
+- Case-Insensitive Search
+- Address Normalization
+- Misspelled Addresses
+- Wrong House Numbers
+- Partial Address Search
+- Intelligent Ranking
+- Did You Mean Suggestions
+- Health Endpoint
+- Swagger API
 
 ---
 
-## Error Handling
+## Assignment Requirements Covered
 
-The application includes:
-
-* Global Exception Filter
-* Request Validation
-* Input Sanitization
-* Structured Error Responses
+- NestJS
+- PostgreSQL
+- TypeORM
+- pg_trgm Extension
+- Address Normalization
+- Exact Search
+- Fuzzy Search
+- Intelligent Ranking
+- Did You Mean Suggestions
+- Query Optimization
+- Swagger Documentation
 
 ---
 
 ## Future Improvements
 
-* Pagination Support
-* Search Result Caching using Redis
-* Search Analytics
-* Geospatial Search
-* Elasticsearch Integration
-* Authentication & Authorization
-* Advanced Ranking using Similarity Scores
+- Redis Caching
+- Pagination
+- Advanced Ranking Model
+- Search Analytics
+- Elasticsearch Integration
+- Machine Learning-based Address Matching
 
 ---
 
 ## Author
 
-Developed as part of the **Intelligent Property Search Backend Assignment** using NestJS, PostgreSQL, and TypeORM.
+**Niveshhraj**
+
+M.Tech – Computer Science & Engineering
+
+Sri Ramakrishna Engineering College
+
+Coimbatore, Tamil Nadu
