@@ -70,7 +70,7 @@ export class SearchController {
       message: 'No exact match found. Showing the closest matching property.',
       count: 1,
       data: [bestMatch],
-      suggestions,
+      Did_You_Mean: suggestions,
     };
   }
 }

@@ -26,8 +26,7 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
 
   logger.setContext('Seeder');
-
-  // const csvFilePath = path.join(__dirname, '../../../../address-table2.csv');
+  
   const csvFilePath = path.join(process.cwd(), 'address-table2.csv');
 
   if (!fs.existsSync(csvFilePath)) {
@@ -57,7 +56,7 @@ async function bootstrap() {
         .insert()
         .into(Property)
         .values(currentBatch)
-        .orIgnore() // Prevents duplicates since fullAddress is unique (if constrained) or handles constraint violations
+        .orIgnore()
         .execute();
 
       // Number of actually inserted rows (orIgnore skips conflicting ones)
@@ -105,12 +104,8 @@ async function bootstrap() {
           batch.push(property);
 
           if (batch.length >= batchSize) {
-            // Pause the stream while processing the batch
             const currentBatch = [...batch];
             batch = [];
-            // Assuming stream auto-pauses/resumes isn't perfect for async iteration inside on('data'),
-            // it's better to manage it carefully, but TypeORM handles async batch insert quickly.
-            // For a perfectly safe backpressure handling, one would use async iterators or pause()/resume().
             await processBatch(currentBatch);
           }
         } catch {

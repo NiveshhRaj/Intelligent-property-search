@@ -8,8 +8,7 @@ import {
 } from 'typeorm';
 
 @Entity('properties')
-// GIN indexes using pg_trgm for partial matching
-@Index('IDX_PROPERTIES_NORMALIZED_ADDRESS_TRGM', ['normalizedAddress']) // Note: actual gin_trgm_ops will be applied in migration
+@Index('IDX_PROPERTIES_NORMALIZED_ADDRESS_TRGM', ['normalizedAddress'])
 @Index('IDX_PROPERTIES_STREET_NAME_TRGM', ['streetName'])
 @Index('IDX_PROPERTIES_CITY_TRGM', ['city'])
 export class Property {

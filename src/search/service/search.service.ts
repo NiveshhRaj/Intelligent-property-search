@@ -1,4 +1,3 @@
-// search.service.ts
 import { Injectable } from '@nestjs/common';
 import { AddressParserService } from '../parser/address-parser.service';
 import { AddressNormalizerService } from '../normalizer/address-normalizer.service';
@@ -17,6 +16,50 @@ export class SearchService {
     private readonly addressNormalizerService: AddressNormalizerService,
     private readonly propertyRepository: PropertyRepository,
   ) {}
+
+  async exactSearch(
+    rawAddress: string,
+    limit: number = 5,
+  ): Promise<SearchResult> {
+    const { houseNumber, streetName, streetSuffix } =
+      this.addressParserService.parse(rawAddress);
+
+    if (!houseNumber && !streetName) {
+      return { exactMatch: false, results: [] };
+    }
+
+    const reconstructedAddress = [houseNumber, streetName, streetSuffix]
+      .filter(Boolean)
+      .join(' ');
+
+    const normalizedAddress =
+      this.addressNormalizerService.normalize(reconstructedAddress);
+
+    if (!normalizedAddress) {
+      return { exactMatch: false, results: [] };
+    }
+
+    const exactResults = await this.propertyRepository.findExactMatches(
+      normalizedAddress,
+      limit,
+    );
+
+    if (exactResults.length > 0) {
+      return { exactMatch: true, results: exactResults };
+    }
+
+    const fuzzyResults = await this.propertyRepository.findFuzzyMatches(
+      normalizedAddress,
+      limit,
+    );
+
+    const rankedResults = this.rankResults(
+      { houseNumber, streetName, streetSuffix },
+      fuzzyResults,
+    );
+
+    return { exactMatch: false, results: rankedResults };
+  }
 
   private calculateScore(
     parsedInput: {
@@ -73,49 +116,5 @@ export class SearchService {
       }))
       .sort((a, b) => b.score - a.score)
       .map((item) => item.property);
-  }
-
-  async exactSearch(
-    rawAddress: string,
-    limit: number = 5,
-  ): Promise<SearchResult> {
-    const { houseNumber, streetName, streetSuffix } =
-      this.addressParserService.parse(rawAddress);
-
-    if (!houseNumber && !streetName) {
-      return { exactMatch: false, results: [] };
-    }
-
-    const reconstructedAddress = [houseNumber, streetName, streetSuffix]
-      .filter(Boolean)
-      .join(' ');
-
-    const normalizedAddress =
-      this.addressNormalizerService.normalize(reconstructedAddress);
-
-    if (!normalizedAddress) {
-      return { exactMatch: false, results: [] };
-    }
-
-    const exactResults = await this.propertyRepository.findExactMatches(
-      normalizedAddress,
-      limit,
-    );
-
-    if (exactResults.length > 0) {
-      return { exactMatch: true, results: exactResults };
-    }
-
-    const fuzzyResults = await this.propertyRepository.findFuzzyMatches(
-      normalizedAddress,
-      limit,
-    );
-
-    const rankedResults = this.rankResults(
-      { houseNumber, streetName, streetSuffix },
-      fuzzyResults,
-    );
-
-    return { exactMatch: false, results: rankedResults };
   }
 }

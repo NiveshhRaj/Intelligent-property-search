@@ -55,8 +55,6 @@ export class AddressParserService {
       const lastPart = streetNameParts[streetNameParts.length - 1];
       const normalizedLastPart = lastPart.toLowerCase().replace(/[^a-z]/g, '');
       if (this.streetSuffixes.has(normalizedLastPart)) {
-        // Keep original casing for output, or normalized? Usually original is fine or normalized is better.
-        // We will output the matched original string, but we can also just output lastPart.
         streetSuffix = lastPart;
         streetNameParts.pop();
       }
